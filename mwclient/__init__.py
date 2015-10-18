@@ -23,8 +23,8 @@
  OTHER DEALINGS IN THE SOFTWARE.
 """
 
-from mwclient.errors import *
-from mwclient.client import Site, __ver__
+from .errors import *
+from .client import Site, __ver__
 import logging
 import warnings
 

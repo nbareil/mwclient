@@ -1,6 +1,6 @@
 import time
 import logging
-from mwclient.errors import MaximumRetriesExceeded
+from .errors import MaximumRetriesExceeded
 
 log = logging.getLogger(__name__)
 
