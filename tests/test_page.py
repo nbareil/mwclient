@@ -9,6 +9,7 @@ import responses
 import mock
 import mwclient
 from mwclient.page import Page
+from mwclient.errors import APIError, AssertUserFailedError
 
 try:
     import json
@@ -269,6 +270,45 @@ class TestPageApiArgs(unittest.TestCase):
         args = self.get_last_api_call_args()
 
         assert args['rvexpandtemplates'] == '1'
+
+    def test_assertuser_true(self):
+        # Check that assert=user is sent when force_login=True
+        self.site.blocked = False
+        self.site.rights = ['read', 'edit']
+        self.site.logged_in = True
+        self.site.force_login = True
+
+        self.site.api.return_value = {
+            'edit': {'result': 'Ok'}
+        }
+        self.page.save('Some text')
+        args = self.get_last_api_call_args()
+
+        assert args['assert'] == 'user'
+
+    def test_assertuser_false(self):
+        # Check that assert=user is not sent when force_login=False
+        self.site.blocked = False
+        self.site.rights = ['read', 'edit']
+        self.site.logged_in = False
+        self.site.force_login = False
+
+        self.site.api.return_value = {
+            'edit': {'result': 'Ok'}
+        }
+        self.page.save('Some text')
+        args = self.get_last_api_call_args()
+
+        assert 'assert' not in args
+
+    def test_handle_edit_error_assertuserfailed(self):
+        # Check that AssertUserFailedError is triggered
+        api_error = APIError('assertuserfailed',
+                             'Assertion that the user is logged in failed',
+                             'See https://en.wikipedia.org/w/api.php for API usage')
+
+        with pytest.raises(AssertUserFailedError):
+            self.page.handle_edit_error(api_error, 'n/a')
 
 
 if __name__ == '__main__':

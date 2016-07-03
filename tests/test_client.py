@@ -234,6 +234,26 @@ class TestClient(TestCase):
 
         assert len(responses.calls) == 1
 
+    @responses.activate
+    def test_api_error_response(self):
+        # Test that APIError is thrown on error response
+
+        site = self.stdSetup()
+
+        self.httpShouldReturn(json.dumps({
+            'error': {
+                'code': 'assertuserfailed',
+                'info': 'Assertion that the user is logged in failed',
+                '*': 'See https://en.wikipedia.org/w/api.php for API usage'
+            }
+        }))
+        with pytest.raises(mwclient.errors.APIError) as excinfo:
+            site.api(action='edit', title='Wikipedia:Sandbox')
+
+        assert excinfo.value.code == 'assertuserfailed'
+        assert excinfo.value.info == 'Assertion that the user is logged in failed'
+        assert len(responses.calls) == 1
+
 
 class TestClientApiMethods(TestCase):
 
