@@ -9,7 +9,7 @@ import responses
 import mock
 import mwclient
 from mwclient.page import Page
-from mwclient.errors import APIError, AssertUserFailedError
+from mwclient.errors import APIError, AssertUserFailedError, ProtectedPageError
 
 try:
     import json
@@ -309,6 +309,18 @@ class TestPageApiArgs(unittest.TestCase):
 
         with pytest.raises(AssertUserFailedError):
             self.page.handle_edit_error(api_error, 'n/a')
+
+    def test_handle_edit_error_protected(self):
+        # Check that ProtectedPageError is triggered
+        api_error = APIError('protectedpage',
+                             'The "editprotected" right is required to edit this page',
+                             'See https://en.wikipedia.org/w/api.php for API usage')
+
+        with pytest.raises(ProtectedPageError) as pp_error:
+            self.page.handle_edit_error(api_error, 'n/a')
+
+        assert pp_error.value.code == 'protectedpage'
+        assert str(pp_error.value) == 'The "editprotected" right is required to edit this page'
 
 
 if __name__ == '__main__':
